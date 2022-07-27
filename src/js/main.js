@@ -1,7 +1,10 @@
 import '../scss/style.scss'
 
-class Intera6{
+import Mousemove from './core/mousemove';
+
+class Intera6 extends Mousemove{
   constructor() {
+    super()
     this.setParams();
     this.bind();
   }
@@ -11,51 +14,39 @@ class Intera6{
     this.shutterChildren = document.querySelectorAll('.shutter span');
     this.mousedownFlag = false;
     this.bindUpdate = this.update.bind(this);
-    this.bindMouseMove = this.mouseMove.bind(this);
-    this.mouse = {
-      x:0,
-      y:0
-    }
+    this.imgUrl;
+
     this.mouseDown = {
-      start:{x: 0, y: 0},
-      end:{x: 0, y: 0},
-      dist:{x: 0, y: 0}
-    }
-    this.param = {
-      x:0,
-      y:0,
-      space:0
+      start:{y: 0},
+      dist:{y: 0}
     }
   }
   mousedown(e) {
     this.mousedownFlag = true;
     this.mouseDown.start.x = e.clientX;
     this.mouseDown.start.y = e.clientY;
+    this.getImage();
   }
   mouseup() {
     this.mousedownFlag = false;
-    fetch('https://source.unsplash.com/random')
-    .then((result) => {
-      this.img.setAttribute('src', result.url);
-    });
+    setTimeout(() => {
+      this.img.setAttribute('src', this.imgUrl);
+    }, -this.mouseDown.dist.y/600 * 1000);
   }
   update(){
     if(this.mousedownFlag) {
       // マウス押してるときは、マウスダウン時からのマウス移動量をちゃんと計算
-      const dx = this.mouse.x - this.mouseDown.start.x;
-      const dy = this.mouse.y - this.mouseDown.start.y;
-      this.mouseDown.dist.x = dx;
-      this.mouseDown.dist.y = dy;
+      this.mouseDown.dist.y = this.mouse.y - this.mouseDown.start.y;
 
-      // ##########################################################
-      var friction = 0.8; // 摩擦係数 小さいとより引っ張られる感じに
-      this.mouseDown.dist.x *= friction;
+      var friction = 0.8; // 摩擦係数
       this.mouseDown.dist.y *= friction;
-      // ##########################################################
     } else {
-    //   // マウス押してないときの移動量は0
-      this.mouseDown.dist.x = 0;
-      this.mouseDown.dist.y = 0;
+    // マウス押してないときはシャッターをゆっくり下げる
+      if (this.mouseDown.dist.y < 0) {
+        this.mouseDown.dist.y += 10;
+      }else{
+        this.mouseDown.dist.y = 0;
+      }
     }
 
     let value =  -this.mouseDown.dist.y/window.innerHeight * 100;
@@ -63,33 +54,17 @@ class Intera6{
     value = 100 - value;
 
     document.documentElement.style.setProperty('--height', value + "vh");
-    // this.shutterChildren.forEach((el) => {
-    //   el.style.setPropertyValue('--height', value + "vh");
-    // });
-
-    console.log(this.mouseDown.dist.y);
-    // 滑らかに移動させるためイージングつける
-    // var ease = 0.125; // イージング量 小さいとゆっくり
-    // this.param.x += (this.mouseDown.dist.x - this.param.x) * ease;
-    // this.param.y += (this.mouseDown.dist.y - this.param.y) * ease;
-
-    // 中心からの距離
-    // var d = Math.sqrt(this.param.x * parthis.paramam.x + this.param.y * this.param.y);
-
     window.requestAnimationFrame(this.bindUpdate);
   }
-  mouseMove(e) {
-    this.mouse.x = e.pageX;
-    this.mouse.y = e.pageY;
-    this.scrollY = window.pageYOffset;
-  }
-  bindMousemove(){
-    window.addEventListener('mousemove', this.bindMouseMove);
+  getImage(){
+    fetch('https://source.unsplash.com/random')
+    .then((result) => {
+      this.imgUrl = result.url;
+    });
   }
   bind(){
     document.addEventListener('mousedown', this.mousedown.bind(this));
     document.addEventListener('mouseup', this.mouseup.bind(this));
-    this.bindMousemove();
     window.requestAnimationFrame(this.bindUpdate);
   }
 }
