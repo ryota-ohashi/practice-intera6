@@ -57,7 +57,7 @@ class Intera6 extends Mousemove{
     window.requestAnimationFrame(this.bindUpdate);
   }
   getImage(){
-    fetch('https://source.unsplash.com/random')
+    fetch('https://picsum.photos/1920')
     .then((result) => {
       this.imgUrl = result.url;
     });
